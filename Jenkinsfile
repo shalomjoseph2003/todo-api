@@ -127,7 +127,7 @@ pipeline {
                 sh 'sleep 5'
 
                 // Health check on staging
-                sh "curl -f http://localhost:${STAGING_PORT}/health || (echo 'Staging health check failed!' && exit 1)"
+                sh "docker exec todo-api-staging wget -qO- http://localhost:3000/health || (echo 'Staging health check failed!' && exit 1)"
 
                 echo "✅ App deployed to staging at http://localhost:${STAGING_PORT}"
             }
@@ -158,7 +158,7 @@ pipeline {
 
                 // Wait and verify production health
                 sh 'sleep 5'
-                sh "curl -f http://localhost:${PROD_PORT}/health || (echo 'Production health check failed!' && exit 1)"
+                sh "docker exec todo-api-prod wget -qO- http://localhost:3000/health || (echo 'Production health check failed!' && exit 1)"
 
                 echo "✅ Released to production at http://localhost:${PROD_PORT}"
                 echo "   Tagged as: ${IMAGE_NAME}:v1.0.${env.BUILD_NUMBER}"
