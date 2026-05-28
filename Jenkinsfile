@@ -173,7 +173,7 @@ pipeline {
                 echo '📊 Setting up monitoring and running health checks...'
 
                 // Check the production app is healthy
-                sh "curl -f http://localhost:${PROD_PORT}/health"
+                sh "docker exec todo-api-prod wget -qO- http://localhost:3000/health"
 
                 // Check all running app containers
                 sh 'docker ps --filter "name=todo-api" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"'
