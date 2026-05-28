@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Todo API — SIT753 DevOps</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --surface2: #1c1c28;
+      --border: #2a2a3a;
+      --accent: #7c6aff;
+      --accent2: #ff6a9b;
+      --green: #4ade80;
+      --text: #e8e8f0;
+      --muted: #6b6b85;
+      --danger: #ff4d6d;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Background grid */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(124,106,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(124,106,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 60px 24px 100px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Header */
+    header {
+      margin-bottom: 48px;
+      animation: fadeDown 0.6s ease both;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(124,106,255,0.12);
+      border: 1px solid rgba(124,106,255,0.3);
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border-radius: 100px;
+      margin-bottom: 20px;
+    }
+
+    .badge::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #fff 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: 0.02em;
+    }
+
+    /* Status bar */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      padding: 12px 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 32px;
+      animation: fadeDown 0.6s 0.1s ease both;
+      flex-wrap: wrap;
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+      animation: pulse 2s infinite;
+    }
+
+    .status-dot.loading { background: #fbbf24; box-shadow: 0 0 8px #fbbf24; }
+    .status-dot.error { background: var(--danger); box-shadow: 0 0 8px var(--danger); animation: none; }
+
+    .status-val {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    /* Add todo form */
+    .add-form {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 28px;
+      animation: fadeDown 0.6s 0.2s ease both;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input[type="text"]::placeholder { color: var(--muted); }
+
+    input[type="text"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(124,106,255,0.15);
+    }
+
+    .btn {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: #9585ff;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 20px rgba(124,106,255,0.4);
+    }
+
+    .btn-primary:active { transform: translateY(0); }
+
+    /* Filter tabs */
+    .filters {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 4px;
+      animation: fadeDown 0.6s 0.3s ease both;
+    }
+
+    .filter-btn {
+      flex: 1;
+      padding: 8px;
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 7px;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .filter-btn.active {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    /* Todo list */
+    .todo-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      animation: fadeDown 0.6s 0.4s ease both;
+    }
+
+    .todo-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      transition: all 0.2s;
+      animation: slideIn 0.3s ease both;
+    }
+
+    .todo-item:hover {
+      border-color: rgba(124,106,255,0.3);
+      background: var(--surface2);
+    }
+
+    .todo-item.completed {
+      opacity: 0.5;
+    }
+
+    .todo-item.completed .todo-title {
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+
+    /* Custom checkbox */
+    .check-btn {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      background: transparent;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: transparent;
+    }
+
+    .check-btn:hover {
+      border-color: var(--green);
+      background: rgba(74,222,128,0.1);
+    }
+
+    .todo-item.completed .check-btn {
+      background: var(--green);
+      border-color: var(--green);
+      color: #000;
+    }
+
+    .todo-title {
+      flex: 1;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .todo-meta {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+
+    .delete-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .delete-btn:hover {
+      background: rgba(255,77,109,0.1);
+      border-color: rgba(255,77,109,0.3);
+      color: var(--danger);
+    }
+
+    /* Empty state */
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.4;
+    }
+
+    .empty p { font-size: 13px; }
+
+    /* Footer */
+    .footer {
+      margin-top: 40px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--muted);
+      flex-wrap: wrap;
+      gap: 8px;
+      animation: fadeDown 0.6s 0.5s ease both;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 16px;
+    }
+
+    .footer-links a {
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover { color: var(--accent); }
+
+    /* Count badge */
+    .count-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 6px;
+      background: rgba(124,106,255,0.15);
+      color: var(--accent);
+      border-radius: 100px;
+      font-size: 11px;
+      margin-left: 6px;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      z-index: 100;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.3s ease;
+      max-width: 300px;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success { border-color: rgba(74,222,128,0.4); }
+    .toast.error { border-color: rgba(255,77,109,0.4); }
+
+    /* Animations */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-8px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* Loading spinner */
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <header>
+      <div class="badge">SIT753 — DevOps Pipeline</div>
+      <h1>Todo Manager</h1>
+      <p class="subtitle">// Connected to Express REST API on localhost:3000</p>
+    </header>
+
+    <div class="status-bar" id="statusBar">
+      <div class="status-item">
+        <div class="status-dot loading" id="statusDot"></div>
+        <span>API Status: <span class="status-val" id="statusText">Connecting...</span></span>
+      </div>
+      <div class="status-item">
+        Uptime: <span class="status-val" id="uptimeText">—</span>
+      </div>
+      <div class="status-item">
+        Todos: <span class="status-val" id="countText">—</span>
+      </div>
+    </div>
+
+    <div class="add-form">
+      <input type="text" id="newTodo" placeholder="Add a new todo..." maxlength="100" />
+      <button class="btn btn-primary" onclick="addTodo()">+ Add</button>
+    </div>
+
+    <div class="filters">
+      <button class="filter-btn active" onclick="setFilter('all', this)">All <span class="count-badge" id="allCount">0</span></button>
+      <button class="filter-btn" onclick="setFilter('active', this)">Active <span class="count-badge" id="activeCount">0</span></button>
+      <button class="filter-btn" onclick="setFilter('completed', this)">Done <span class="count-badge" id="doneCount">0</span></button>
+    </div>
+
+    <div class="todo-list" id="todoList">
+      <div class="empty">
+        <div class="empty-icon">◎</div>
+        <p>Loading todos...</p>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>Todo API v1.0.0 — Node.js + Express</span>
+      <div class="footer-links">
+        <a href="/api/todos" target="_blank">/api/todos</a>
+        <a href="/health" target="_blank">/health</a>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const API = '/api/todos';
+    let todos = [];
+    let filter = 'all';
+
+    // ── Fetch all todos ───────────────────────────────────
+    async function loadTodos() {
+      try {
+        const res = await fetch(API);
+        const data = await res.json();
+        todos = data.data || [];
+        renderTodos();
+        updateCounts();
+      } catch (e) {
+        showToast('Failed to load todos', 'error');
+      }
+    }
+
+    // ── Add todo ──────────────────────────────────────────
+    async function addTodo() {
+      const input = document.getElementById('newTodo');
+      const title = input.value.trim();
+      if (!title) return;
+
+      try {
+        const res = await fetch(API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title })
+        });
+        const data = await res.json();
+        if (data.success) {
+          todos.unshift(data.data);
+          input.value = '';
+          renderTodos();
+          updateCounts();
+          showToast('Todo added ✓', 'success');
+        }
+      } catch (e) {
+        showToast('Failed to add todo', 'error');
+      }
+    }
+
+    // ── Toggle complete ───────────────────────────────────
+    async function toggleTodo(id) {
+      const todo = todos.find(t => t.id === id);
+      if (!todo) return;
+
+      try {
+        const res = await fetch(`${API}/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ completed: !todo.completed })
+        });
+        const data = await res.json();
+        if (data.success) {
+          const index = todos.findIndex(t => t.id === id);
+          todos[index] = data.data;
+          renderTodos();
+          updateCounts();
+        }
+      } catch (e) {
+        showToast('Failed to update todo', 'error');
+      }
+    }
+
+    // ── Delete todo ───────────────────────────────────────
+    async function deleteTodo(id) {
+      try {
+        const res = await fetch(`${API}/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+          todos = todos.filter(t => t.id !== id);
+          renderTodos();
+          updateCounts();
+          showToast('Todo deleted', 'success');
+        }
+      } catch (e) {
+        showToast('Failed to delete todo', 'error');
+      }
+    }
+
+    // ── Render ────────────────────────────────────────────
+    function renderTodos() {
+      const list = document.getElementById('todoList');
+      const filtered = todos.filter(t => {
+        if (filter === 'active') return !t.completed;
+        if (filter === 'completed') return t.completed;
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        list.innerHTML = `
+          <div class="empty">
+            <div class="empty-icon">◎</div>
+            <p>${filter === 'all' ? 'No todos yet. Add one above!' : 'Nothing here.'}</p>
+          </div>`;
+        return;
+      }
+
+      list.innerHTML = filtered.map(todo => `
+        <div class="todo-item ${todo.completed ? 'completed' : ''}" id="item-${todo.id}">
+          <button class="check-btn" onclick="toggleTodo('${todo.id}')">✓</button>
+          <span class="todo-title">${escapeHtml(todo.title)}</span>
+          <span class="todo-meta">${formatDate(todo.createdAt)}</span>
+          <button class="delete-btn" onclick="deleteTodo('${todo.id}')">✕</button>
+        </div>
+      `).join('');
+    }
+
+    // ── Filter ────────────────────────────────────────────
+    function setFilter(f, btn) {
+      filter = f;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderTodos();
+    }
+
+    // ── Update counts ─────────────────────────────────────
+    function updateCounts() {
+      document.getElementById('allCount').textContent = todos.length;
+      document.getElementById('activeCount').textContent = todos.filter(t => !t.completed).length;
+      document.getElementById('doneCount').textContent = todos.filter(t => t.completed).length;
+      document.getElementById('countText').textContent = todos.length;
+    }
+
+    // ── Health check ──────────────────────────────────────
+    async function checkHealth() {
+      const dot = document.getElementById('statusDot');
+      const text = document.getElementById('statusText');
+      const uptime = document.getElementById('uptimeText');
+
+      try {
+        const res = await fetch('/health');
+        const data = await res.json();
+        dot.className = 'status-dot';
+        text.textContent = data.status;
+        uptime.textContent = Math.floor(data.uptime) + 's';
+      } catch (e) {
+        dot.className = 'status-dot error';
+        text.textContent = 'Offline';
+      }
+    }
+
+    // ── Toast ─────────────────────────────────────────────
+    function showToast(msg, type = '') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = `toast ${type} show`;
+      setTimeout(() => t.className = 'toast', 2500);
+    }
+
+    // ── Helpers ───────────────────────────────────────────
+    function escapeHtml(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function formatDate(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      return d.toLocaleDateString('en-AU', { day: '2-digit', month: 'short' });
+    }
+
+    // ── Enter key to add ──────────────────────────────────
+    document.getElementById('newTodo').addEventListener('keydown', e => {
+      if (e.key === 'Enter') addTodo();
+    });
+
+    // ── Init ──────────────────────────────────────────────
+    checkHealth();
+    loadTodos();
+    setInterval(checkHealth, 30000);
+  </script>
+</body>
+</html>
