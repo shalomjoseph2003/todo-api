@@ -11,6 +11,7 @@ RUN npm ci
 
 # Copy source code
 COPY src/ ./src/
+COPY public/ ./public/
 
 # ── Stage 2: Production ──────────────────────────────────
 FROM node:18-alpine AS production
