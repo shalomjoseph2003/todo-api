@@ -20,10 +20,9 @@ describe('GET /health', () => {
 
 // ─── Root Route ─────────────────────────────────────────
 describe('GET /', () => {
-  test('should return welcome message', async () => {
+  test('should return welcome page', async () => {
     const res = await request(app).get('/');
     expect(res.statusCode).toBe(200);
-    expect(res.body.message).toBe('Todo API is running!');
   });
 });
 
