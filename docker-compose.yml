@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+
+  # ── Main Application ─────────────────────────────────
+  todo-api:
+    build: .
+    container_name: todo-api-prod
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── Staging Version ───────────────────────────────────
+  todo-api-staging:
+    build: .
+    container_name: todo-api-staging
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=staging
+      - PORT=3000
+    restart: unless-stopped
+
+  # ── Prometheus (Monitoring) ───────────────────────────
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    restart: unless-stopped
+
+  # ── Grafana (Dashboards) ──────────────────────────────
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3002:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+    depends_on:
+      - prometheus
+    restart: unless-stopped

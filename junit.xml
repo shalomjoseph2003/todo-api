@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="jest tests" tests="14" failures="0" errors="0" time="1.632">
+  <testsuite name="GET /health" errors="0" failures="0" skipped="0" timestamp="2026-05-28T04:24:26" time="1.475" tests="14">
+    <testcase classname="GET /health should return status UP" name="GET /health should return status UP" time="0.044">
+    </testcase>
+    <testcase classname="GET / should return welcome message" name="GET / should return welcome message" time="0.007">
+    </testcase>
+    <testcase classname="GET /api/todos should return empty array when no todos" name="GET /api/todos should return empty array when no todos" time="0.009">
+    </testcase>
+    <testcase classname="GET /api/todos should return todos after creation" name="GET /api/todos should return todos after creation" time="0.032">
+    </testcase>
+    <testcase classname="POST /api/todos should create a new todo" name="POST /api/todos should create a new todo" time="0.007">
+    </testcase>
+    <testcase classname="POST /api/todos should return 400 if title is missing" name="POST /api/todos should return 400 if title is missing" time="0.007">
+    </testcase>
+    <testcase classname="POST /api/todos should return 400 if title is empty string" name="POST /api/todos should return 400 if title is empty string" time="0.005">
+    </testcase>
+    <testcase classname="GET /api/todos/:id should return a single todo" name="GET /api/todos/:id should return a single todo" time="0.012">
+    </testcase>
+    <testcase classname="GET /api/todos/:id should return 404 for non-existent todo" name="GET /api/todos/:id should return 404 for non-existent todo" time="0.005">
+    </testcase>
+    <testcase classname="PUT /api/todos/:id should update a todo" name="PUT /api/todos/:id should update a todo" time="0.012">
+    </testcase>
+    <testcase classname="PUT /api/todos/:id should return 404 for non-existent todo" name="PUT /api/todos/:id should return 404 for non-existent todo" time="0.006">
+    </testcase>
+    <testcase classname="DELETE /api/todos/:id should delete a todo" name="DELETE /api/todos/:id should delete a todo" time="0.008">
+    </testcase>
+    <testcase classname="DELETE /api/todos/:id should return 404 for non-existent todo" name="DELETE /api/todos/:id should return 404 for non-existent todo" time="0.005">
+    </testcase>
+    <testcase classname="Unknown routes should return 404 for unknown routes" name="Unknown routes should return 404 for unknown routes" time="0.007">
+    </testcase>
+  </testsuite>
+</testsuites>
